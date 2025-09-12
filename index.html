@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Simulador de precios</title>
+	<meta name="description" content="SimuladorJS">
+	<link rel="icon" href="data:,">
+	<style>
+		:root { color-scheme: light dark; }
+		html, body { height: 100%; margin: 0; }
+		body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; line-height: 1.4; }
+		.container { max-width: 960px; margin: 0 auto; padding: 16px; }
+		header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+		main { display: grid; gap: 16px; }
+		.card { border: 1px solid currentColor; border-radius: 8px; padding: 12px; }
+		.hidden { display: none !important; }
+		button { cursor: pointer; }
+		label { display: inline-block; margin: 6px 0 2px; }
+		input, select { width: 100%; padding: 8px; box-sizing: border-box; }
+		footer { margin-top: 24px; font-size: .9rem; opacity: .8; }
+		.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+	</style>
+</head>
+<body>
+	<div class="container">
+		<header>
+			<h1>Simulador de precios</h1>
+			<div>
+				<button id="resetBtn" type="button">Reiniciar</button>
+			</div>
+		</header>
+
+		<main>
+			<section class="card">
+				<h2>Parámetros</h2>
+				<form id="paramsForm">
+					<div>
+						<label for="plan">Plan base</label>
+						<select id="plan" name="plan" required>
+							<option value="60-500">60 hs / mes — USD 500</option>
+							<option value="120-700">120 hs / mes — USD 700</option>
+							<option value="180-1350">180 hs / mes — USD 1350</option>
+						</select>
+					</div>
+					<div>
+						<label for="hoursNeeded">Horas que necesito</label>
+						<input id="hoursNeeded" name="hoursNeeded" type="number" inputmode="numeric" min="1" step="1" placeholder="Ej: 60" required>
+					</div>
+					<div class="grid-2">
+						<div>
+							<label for="pricePerHour">Precio por hora (USD)</label>
+							<input id="pricePerHour" name="pricePerHour" type="text" readonly>
+						</div>
+						<div>
+							<label for="totalUSD">Total estimado (USD)</label>
+							<input id="totalUSD" name="totalUSD" type="text" readonly>
+						</div>
+					</div>
+					<div style="margin-top:12px">
+						<button id="runBtn" type="submit">Calcular</button>
+					</div>
+				</form>
+			</section>
+
+			<section class="card">
+				<h2>Resultado</h2>
+				<output id="result">—</output>
+			</section>
+		</main>
+
+		
+	</div>
+
+	<script type="module" src="./index.js"></script>
+</body>
+</html>
