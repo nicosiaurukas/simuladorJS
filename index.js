@@ -1,176 +1,192 @@
-// Simulador de precios por plan: 60hs=USD500, 120hs=USD700, 180hs=USD1350
+// Simulador de precios por plan con localStorage y DOM dinámico
 
+// Array de planes disponibles
+const planes = [
+  { id: '60-500', nombre: 'Plan Básico', horas: 60, precio: 500, descripcion: 'Ideal para proyectos pequeños' },
+  { id: '120-700', nombre: 'Plan Estándar', horas: 120, precio: 700, descripcion: 'Perfecto para proyectos medianos' },
+  { id: '180-1350', nombre: 'Plan Premium', horas: 180, precio: 1350, descripcion: 'Para proyectos grandes y complejos' }
+];
+
+// Recuperar simulaciones del localStorage o inicializar vacío
+let simulaciones = JSON.parse(localStorage.getItem("simulaciones")) || [];
+
+// Formateadores
+const fmtCurrency = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+const fmtNumber = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+
+// Elementos del DOM
 const form = document.getElementById('paramsForm');
 const resultEl = document.getElementById('result');
 const resetBtn = document.getElementById('resetBtn');
-
 const planSelect = document.getElementById('plan');
 const hoursInput = document.getElementById('hoursNeeded');
 const pricePerHourInput = document.getElementById('pricePerHour');
 const totalUSDInput = document.getElementById('totalUSD');
 
-// Datos base (arrays y constantes)
-const plans = [
-	{ id: '60-500', label: '60 hs / mes — USD 500', baseHours: 60, basePriceUSD: 500 },
-	{ id: '120-700', label: '120 hs / mes — USD 700', baseHours: 120, basePriceUSD: 700 },
-	{ id: '180-1350', label: '180 hs / mes — USD 1350', baseHours: 180, basePriceUSD: 1350 },
-];
-
-function findPlanById(id) {
-	for (const plan of plans) {
-		if (plan.id === id) return plan;
-	}
-	return null;
+// Función para calcular tarifa por hora
+function calcularTarifaPorHora(plan) {
+  if (!plan) return null;
+  return plan.precio / plan.horas;
 }
 
-function parsePlan(value) {
-	// value ej: "60-500"
-	if (typeof value !== 'string') return null;
-	const [hoursStr, priceStr] = value.split('-');
-	const hours = Number(hoursStr);
-	const price = Number(priceStr);
-	if (!Number.isFinite(hours) || !Number.isFinite(price) || hours <= 0 || price <= 0) return null;
-	return { baseHours: hours, basePriceUSD: price };
+// Función para calcular total
+function calcularTotal(tarifaHora, horasNecesarias) {
+  if (!Number.isFinite(tarifaHora) || !Number.isFinite(horasNecesarias)) return null;
+  return tarifaHora * horasNecesarias;
 }
 
-function parseIntSafe(value) {
-	const n = Number.parseInt(String(value), 10);
-	return Number.isFinite(n) && n > 0 ? n : null;
+// Función para actualizar campos derivados
+function actualizarCamposDerivados() {
+  const planSeleccionado = planes.find(p => p.id === planSelect.value);
+  const horasNecesarias = parseInt(hoursInput.value) || 0;
+  const tarifaHora = calcularTarifaPorHora(planSeleccionado);
+
+  pricePerHourInput.value = tarifaHora ? fmtCurrency.format(tarifaHora) : '';
+  totalUSDInput.value = tarifaHora && horasNecesarias ? fmtCurrency.format(calcularTotal(tarifaHora, horasNecesarias)) : '';
 }
 
-const fmtCurrency = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
-const fmtNumber = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+// Función para actualizar resultado
+function actualizarResultado() {
+  const planSeleccionado = planes.find(p => p.id === planSelect.value);
+  const horasNecesarias = parseInt(hoursInput.value) || 0;
+  const tarifaHora = calcularTarifaPorHora(planSeleccionado);
 
-function computeHourlyRateUSD(plan) {
-	if (!plan) return null;
-	return plan.basePriceUSD / plan.baseHours;
+  if (!planSeleccionado || !tarifaHora || !horasNecesarias) {
+    resultEl.textContent = 'Completa el plan y las horas válidas.';
+    return;
+  }
+
+  const total = calcularTotal(tarifaHora, horasNecesarias);
+  const resumen = `📊 SIMULACIÓN CALCULADA\n\n` +
+    `Plan: ${planSeleccionado.nombre}\n` +
+    `Horas base: ${fmtNumber.format(planSeleccionado.horas)} hs/mes\n` +
+    `Precio base: ${fmtCurrency.format(planSeleccionado.precio)}\n` +
+    `Tarifa por hora: ${fmtCurrency.format(tarifaHora)}\n` +
+    `Horas solicitadas: ${fmtNumber.format(horasNecesarias)} hs\n` +
+    `Total estimado: ${fmtCurrency.format(total)}\n\n` +
+    `💡 ${planSeleccionado.descripcion}`;
+
+  resultEl.textContent = resumen;
 }
 
-function computeTotalUSD(hourlyRate, hoursNeeded) {
-	if (!Number.isFinite(hourlyRate) || !Number.isFinite(hoursNeeded)) return null;
-	return hourlyRate * hoursNeeded;
+// Función para agregar simulación al historial
+function agregarSimulacion(plan, horas, tarifa, total) {
+  const simulacion = {
+    id: Date.now(),
+    fecha: new Date().toLocaleString('es-AR'),
+    plan: plan.nombre,
+    horasBase: plan.horas,
+    precioBase: plan.precio,
+    horasSolicitadas: horas,
+    tarifaHora: tarifa,
+    total: total
+  };
+
+  simulaciones.unshift(simulacion); // Agregar al inicio
+  
+  // Mantener solo las últimas 20 simulaciones
+  if (simulaciones.length > 20) {
+    simulaciones = simulaciones.slice(0, 20);
+  }
+
+  guardarSimulaciones();
+  imprimirHistorialEnHTML();
 }
 
-function updateDerivedFields() {
-	const plan = parsePlan(planSelect?.value);
-	const hoursNeeded = parseIntSafe(hoursInput?.value);
-	const hourly = computeHourlyRateUSD(plan);
-
-	pricePerHourInput.value = hourly ? fmtCurrency.format(hourly) : '';
-	totalUSDInput.value = hourly && hoursNeeded ? fmtCurrency.format(computeTotalUSD(hourly, hoursNeeded)) : '';
+// Función para guardar simulaciones en localStorage
+function guardarSimulaciones() {
+  localStorage.setItem("simulaciones", JSON.stringify(simulaciones));
 }
 
-function updateResultSummary() {
-	const plan = parsePlan(planSelect?.value);
-	const hoursNeeded = parseIntSafe(hoursInput?.value);
-	const hourly = computeHourlyRateUSD(plan);
-	if (!plan || !hourly || !hoursNeeded) {
-		resultEl.textContent = 'Completa el plan y las horas válidas.';
-		return;
-	}
-	const total = computeTotalUSD(hourly, hoursNeeded);
-	const summary = `Plan base: ${fmtNumber.format(plan.baseHours)} hs por ${fmtCurrency.format(plan.basePriceUSD)} (USD ${fmtCurrency.format(hourly)} / hs).\n` +
-		`Horas solicitadas: ${fmtNumber.format(hoursNeeded)} hs.\n` +
-		`Total estimado: ${fmtCurrency.format(total)}.`;
-	resultEl.textContent = summary;
+// Función para imprimir historial en HTML
+function imprimirHistorialEnHTML() {
+  // Crear o actualizar sección de historial
+  let historialSection = document.getElementById('historial-section');
+  
+  if (!historialSection) {
+    historialSection = document.createElement('section');
+    historialSection.id = 'historial-section';
+    historialSection.innerHTML = '<h2>📚 Historial de Simulaciones</h2><div id="historial-container"></div>';
+    document.body.appendChild(historialSection);
+  }
+
+  const contenedor = document.getElementById('historial-container');
+  contenedor.innerHTML = '';
+
+  if (simulaciones.length === 0) {
+    contenedor.innerHTML = '<p>No hay simulaciones guardadas</p>';
+    return;
+  }
+
+  simulaciones.forEach(sim => {
+    const div = document.createElement('div');
+    div.classList.add('historial-item');
+    div.innerHTML = `
+      <h4>${sim.plan} - ${sim.fecha}</h4>
+      <p>${fmtNumber.format(sim.horasSolicitadas)} hs → ${fmtCurrency.format(sim.total)}</p>
+      <button onclick="cargarSimulacion(${sim.id})" class="btn-cargar">Cargar</button>
+      <button onclick="eliminarSimulacion(${sim.id})" class="btn-eliminar">Eliminar</button>
+    `;
+    contenedor.appendChild(div);
+  });
 }
 
-// --- Flujo por consola con prompt/confirm/alert ---
-function buildPlansMenuText() {
-	let lines = ['Elegí un plan base (ingresá 60, 120 o 180):'];
-	for (const p of plans) {
-		const hourly = computeHourlyRateUSD(p);
-		lines.push(`- ${p.baseHours} hs → ${fmtCurrency.format(p.basePriceUSD)} (≈ ${fmtCurrency.format(hourly)}/hs)`);
-	}
-	return lines.join('\n');
+// Función para cargar una simulación
+function cargarSimulacion(id) {
+  const simulacion = simulaciones.find(s => s.id === id);
+  if (!simulacion) return;
+
+  // Buscar el plan correspondiente
+  const plan = planes.find(p => p.nombre === simulacion.plan);
+  if (plan) {
+    planSelect.value = plan.id;
+    hoursInput.value = simulacion.horasSolicitadas;
+    actualizarCamposDerivados();
+    actualizarResultado();
+  }
 }
 
-function promptForPlanBaseHours() {
-	// Repite hasta recibir 60, 120 o 180 o cancelación
-	while (true) {
-		const input = prompt(buildPlansMenuText());
-		if (input === null) return null; // cancelado
-		const normalized = String(input).trim();
-		if (normalized === '60' || normalized === '120' || normalized === '180') {
-			return Number(normalized);
-		}
-		alert('Entrada inválida. Por favor ingresá 60, 120 o 180.');
-	}
+// Función para eliminar una simulación
+function eliminarSimulacion(id) {
+  if (confirm('¿Estás seguro de que quieres eliminar esta simulación?')) {
+    simulaciones = simulaciones.filter(s => s.id !== id);
+    guardarSimulaciones();
+    imprimirHistorialEnHTML();
+  }
 }
 
-function promptForHoursNeeded() {
-	while (true) {
-		const input = prompt('¿Cuántas horas necesitás? (número entero > 0)');
-		if (input === null) return null; // cancelado
-		const n = parseIntSafe(input);
-		if (n !== null) return n;
-		alert('Entrada inválida. Ingresá un número entero mayor a 0.');
-	}
-}
-
-function runConsoleSimulator() {
-	console.clear();
-	console.log('Simulador de precios (flujo por consola)');
-	console.table(plans.map(p => ({ plan: p.label, horas: p.baseHours, precioUSD: p.basePriceUSD, usdPorHora: (p.basePriceUSD / p.baseHours) })));
-
-	const proceed = confirm('¿Querés usar el simulador por consola con cuadros de diálogo?');
-	if (!proceed) {
-		console.log('El usuario decidió no usar el flujo por consola.');
-		return;
-	}
-
-	const baseHours = promptForPlanBaseHours();
-	if (baseHours === null) {
-		alert('Operación cancelada.');
-		console.warn('Operación cancelada en selección de plan.');
-		return;
-	}
-	const plan = plans.find(p => p.baseHours === baseHours);
-	const hourly = computeHourlyRateUSD(plan);
-
-	const hoursNeeded = promptForHoursNeeded();
-	if (hoursNeeded === null) {
-		alert('Operación cancelada.');
-		console.warn('Operación cancelada al ingresar horas.');
-		return;
-	}
-
-	const total = computeTotalUSD(hourly, hoursNeeded);
-	const summary = `Plan base: ${plan.baseHours} hs por ${fmtCurrency.format(plan.basePriceUSD)} (≈ ${fmtCurrency.format(hourly)}/hs)\n` +
-		`Horas solicitadas: ${fmtNumber.format(hoursNeeded)} hs\n` +
-		`Total estimado: ${fmtCurrency.format(total)}`;
-
-	console.log('Resumen de simulación');
-	console.log(summary);
-	alert(summary);
-}
-
+// Event Listeners
 form?.addEventListener('submit', (event) => {
-	event.preventDefault();
-	updateDerivedFields();
-	updateResultSummary();
+  event.preventDefault();
+  
+  const planSeleccionado = planes.find(p => p.id === planSelect.value);
+  const horasNecesarias = parseInt(hoursInput.value) || 0;
+  const tarifaHora = calcularTarifaPorHora(planSeleccionado);
+  const total = calcularTotal(tarifaHora, horasNecesarias);
+
+  if (planSeleccionado && tarifaHora && horasNecesarias) {
+    actualizarResultado();
+    agregarSimulacion(planSeleccionado, horasNecesarias, tarifaHora, total);
+  }
 });
 
 planSelect?.addEventListener('change', () => {
-	updateDerivedFields();
+  actualizarCamposDerivados();
 });
 
 hoursInput?.addEventListener('input', () => {
-	updateDerivedFields();
+  actualizarCamposDerivados();
 });
 
 resetBtn?.addEventListener('click', () => {
-	form?.reset();
-	pricePerHourInput.value = '';
-	totalUSDInput.value = '';
-	resultEl.textContent = '—';
-	planSelect?.focus();
+  form?.reset();
+  pricePerHourInput.value = '';
+  totalUSDInput.value = '';
+  resultEl.textContent = '—';
+  planSelect?.focus();
 });
 
-// Estado inicial: calcular a partir del valor por defecto del plan
-updateDerivedFields();
+// Inicializar
+actualizarCamposDerivados();
 resultEl.textContent = '—';
-
-// Lanzar flujo de consola (opcional) al cargar
-// Se ejecuta tras un pequeño delay para permitir que cargue el DOM
-setTimeout(runConsoleSimulator, 0);
+imprimirHistorialEnHTML();
