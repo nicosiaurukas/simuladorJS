@@ -270,6 +270,3 @@ Desarrollado como proyecto final para demostrar competencias en:
 - [x] Comentarios oportunos
 - [x] Código ordenado y bien estructurado
 
----
-
-**¡Proyecto 100% funcional y listo para entrega!** 🎉
