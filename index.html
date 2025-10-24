@@ -1,78 +1,208 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Simulador de precios</title>
-	<meta name="description" content="SimuladorJS">
-	<link rel="icon" href="data:,">
-	<style>
-		:root { color-scheme: light dark; }
-		html, body { height: 100%; margin: 0; }
-		body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; line-height: 1.4; }
-		.container { max-width: 960px; margin: 0 auto; padding: 16px; }
-		header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-		main { display: grid; gap: 16px; }
-		.card { border: 1px solid currentColor; border-radius: 8px; padding: 12px; }
-		.hidden { display: none !important; }
-		button { cursor: pointer; }
-		label { display: inline-block; margin: 6px 0 2px; }
-		input, select { width: 100%; padding: 8px; box-sizing: border-box; }
-		footer { margin-top: 24px; font-size: .9rem; opacity: .8; }
-		.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-	</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Servicios Profesionales - ProyectoFinal</title>
+    <meta name="description" content="Simulador interactivo para cotizar servicios de desarrollo de software">
+    
+    <!-- SweetAlert2 para alertas modernas -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-	<div class="container">
-		<header>
-			<h1>Simulador de precios</h1>
-			<div>
-				<button id="resetBtn" type="button">Reiniciar</button>
-			</div>
-		</header>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-calculator"></i> Simulador de Servicios Profesionales</h1>
+                <p>Calcula el costo de tus proyectos de desarrollo de software</p>
+            </div>
+        </header>
 
-		<p>Este simulador permite seleccionar un plan base mensual (60/120/180 horas) con su precio en USD, calcular la tarifa por hora, ingresar las horas necesarias y estimar el costo total. La interacción principal se realiza con JavaScript, incluyendo cálculos, validaciones y mensajes por consola.</p>
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="calculator">
+                <i class="fas fa-calculator"></i> Calculadora
+            </button>
+            <button class="nav-tab" data-tab="plans">
+                <i class="fas fa-list"></i> Planes
+            </button>
+            <button class="nav-tab" data-tab="history">
+                <i class="fas fa-history"></i> Historial
+            </button>
+        </nav>
 
-		<main>
-			<section class="card">
-				<h2>Parámetros</h2>
-				<form id="paramsForm">
-					<div>
-						<label for="plan">Plan base</label>
-						<select id="plan" name="plan" required>
-							<option value="60-500">60 hs / mes — USD 500</option>
-							<option value="120-700">120 hs / mes — USD 700</option>
-							<option value="180-1350">180 hs / mes — USD 1350</option>
-						</select>
-					</div>
-					<div>
-						<label for="hoursNeeded">Horas que necesito</label>
-						<input id="hoursNeeded" name="hoursNeeded" type="number" inputmode="numeric" min="1" step="1" placeholder="Ej: 60" required>
-					</div>
-					<div class="grid-2">
-						<div>
-							<label for="pricePerHour">Precio por hora (USD)</label>
-							<input id="pricePerHour" name="pricePerHour" type="text" readonly>
-						</div>
-						<div>
-							<label for="totalUSD">Total estimado (USD)</label>
-							<input id="totalUSD" name="totalUSD" type="text" readonly>
-						</div>
-					</div>
-					<div style="margin-top:12px">
-						<button id="runBtn" type="submit">Calcular</button>
-					</div>
-				</form>
-			</section>
+        <!-- Calculator Tab -->
+        <div id="calculator" class="tab-content active">
+            <div class="grid-container">
+                <!-- Form Section -->
+                <section class="card form-section">
+                    <h2><i class="fas fa-cog"></i> Configuración del Proyecto</h2>
+                    
+                    <form id="projectForm" class="project-form">
+                        <!-- Plan Selection -->
+                        <div class="form-group">
+                            <label for="planSelect">
+                                <i class="fas fa-layer-group"></i> Plan Base
+                            </label>
+                            <select id="planSelect" name="plan" required>
+                                <option value="">Selecciona un plan...</option>
+                            </select>
+                            <div id="planDetails" class="plan-details"></div>
+                        </div>
 
-			<section class="card">
-				<h2>Resultado</h2>
-				<output id="result">—</output>
-			</section>
-		</main>
+                        <!-- Service Type -->
+                        <div class="form-group">
+                            <label for="serviceType">
+                                <i class="fas fa-briefcase"></i> Tipo de Servicio
+                            </label>
+                            <select id="serviceType" name="serviceType" required>
+                                <option value="">Selecciona un servicio...</option>
+                            </select>
+                        </div>
 
-	</div>
+                        <!-- Hours Input -->
+                        <div class="form-group">
+                            <label for="hoursNeeded">
+                                <i class="fas fa-clock"></i> Horas Necesarias
+                            </label>
+                            <input type="number" id="hoursNeeded" name="hoursNeeded" 
+                                   min="1" step="1" placeholder="Ej: 40" required>
+                        </div>
 
-	<script type="module" src="./index.js"></script>
+                        <!-- Billing Period -->
+                        <div class="form-group">
+                            <label for="billingPeriod">
+                                <i class="fas fa-calendar"></i> Período de Facturación
+                            </label>
+                            <select id="billingPeriod" name="billingPeriod" required>
+                                <option value="monthly">Mensual</option>
+                                <option value="quarterly">Trimestral (5% desc.)</option>
+                                <option value="semiannual">Semestral (8% desc.)</option>
+                                <option value="annual">Anual (15% desc.)</option>
+                            </select>
+                        </div>
+
+                        <!-- Currency -->
+                        <div class="form-group">
+                            <label for="currency">
+                                <i class="fas fa-dollar-sign"></i> Moneda
+                            </label>
+                            <select id="currency" name="currency" required>
+                                <option value="USD">USD - Dólar Americano</option>
+                                <option value="EUR">EUR - Euro</option>
+                                <option value="ARS">ARS - Peso Argentino</option>
+                                <option value="BRL">BRL - Real Brasileño</option>
+                            </select>
+                        </div>
+
+                        <!-- Additional Options -->
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="rushOrder" name="rushOrder">
+                                <span class="checkmark"></span>
+                                <i class="fas fa-bolt"></i> Proyecto Urgente (+20%)
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="maintenance" name="maintenance">
+                                <span class="checkmark"></span>
+                                <i class="fas fa-tools"></i> Incluir Mantenimiento (6 meses)
+                            </label>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-calculator"></i> Calcular Cotización
+                            </button>
+                            <button type="button" id="resetForm" class="btn btn-secondary">
+                                <i class="fas fa-undo"></i> Limpiar
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Results Section -->
+                <section class="card results-section">
+                    <h2><i class="fas fa-chart-line"></i> Resultado de la Cotización</h2>
+                    
+                    <div id="calculationResults" class="calculation-results">
+                        <div class="result-placeholder">
+                            <i class="fas fa-calculator"></i>
+                            <p>Completa el formulario para ver la cotización</p>
+                        </div>
+                    </div>
+
+                    <!-- Chart Container -->
+                    <div class="chart-container">
+                        <canvas id="costChart"></canvas>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="result-actions" id="resultActions" style="display: none;">
+                        <button id="saveQuote" class="btn btn-success">
+                            <i class="fas fa-save"></i> Guardar Cotización
+                        </button>
+                        <button id="exportQuote" class="btn btn-info">
+                            <i class="fas fa-download"></i> Exportar PDF
+                        </button>
+                        <button id="shareQuote" class="btn btn-warning">
+                            <i class="fas fa-share"></i> Compartir
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Plans Tab -->
+        <div id="plans" class="tab-content">
+            <section class="card">
+                <h2><i class="fas fa-layer-group"></i> Planes Disponibles</h2>
+                <div id="plansGrid" class="plans-grid">
+                    <!-- Plans will be loaded dynamically -->
+                </div>
+            </section>
+        </div>
+
+        <!-- History Tab -->
+        <div id="history" class="tab-content">
+            <section class="card">
+                <h2><i class="fas fa-history"></i> Historial de Cotizaciones</h2>
+                <div class="history-controls">
+                    <button id="clearHistory" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Limpiar Historial
+                    </button>
+                </div>
+                <div id="historyList" class="history-list">
+                    <!-- History items will be loaded dynamically -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 Simulador de Servicios Profesionales - Proyecto Final</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Cargando datos...</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 </html>

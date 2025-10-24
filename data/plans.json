@@ -1,0 +1,57 @@
+{
+  "plans": [
+    {
+      "id": "basic",
+      "name": "Plan Básico",
+      "baseHours": 60,
+      "basePriceUSD": 500,
+      "description": "Ideal para proyectos pequeños y startups",
+      "features": [
+        "Soporte por email",
+        "Documentación básica",
+        "Actualizaciones mensuales"
+      ],
+      "popular": false
+    },
+    {
+      "id": "professional",
+      "name": "Plan Profesional",
+      "baseHours": 120,
+      "basePriceUSD": 700,
+      "description": "Perfecto para empresas en crecimiento",
+      "features": [
+        "Soporte prioritario",
+        "Documentación completa",
+        "Actualizaciones semanales",
+        "Consultoría incluida"
+      ],
+      "popular": true
+    },
+    {
+      "id": "enterprise",
+      "name": "Plan Enterprise",
+      "baseHours": 180,
+      "basePriceUSD": 1350,
+      "description": "Para grandes empresas y proyectos complejos",
+      "features": [
+        "Soporte 24/7",
+        "Documentación personalizada",
+        "Actualizaciones diarias",
+        "Consultoría dedicada",
+        "SLA garantizado"
+      ],
+      "popular": false
+    }
+  ],
+  "discounts": {
+    "annual": 0.15,
+    "semiannual": 0.08,
+    "quarterly": 0.05
+  },
+  "currencies": {
+    "USD": 1.0,
+    "EUR": 0.85,
+    "ARS": 850.0,
+    "BRL": 5.2
+  }
+}

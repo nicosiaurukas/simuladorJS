@@ -1,0 +1,32 @@
+{
+  "services": [
+    {
+      "id": "development",
+      "name": "Desarrollo de Software",
+      "baseRate": 1.0,
+      "description": "Desarrollo de aplicaciones web y móviles",
+      "categories": ["frontend", "backend", "fullstack"]
+    },
+    {
+      "id": "consulting",
+      "name": "Consultoría Técnica",
+      "baseRate": 1.2,
+      "description": "Asesoramiento en arquitectura y mejores prácticas",
+      "categories": ["architecture", "security", "performance"]
+    },
+    {
+      "id": "maintenance",
+      "name": "Mantenimiento",
+      "baseRate": 0.8,
+      "description": "Soporte y mantenimiento de sistemas existentes",
+      "categories": ["bugfixes", "updates", "monitoring"]
+    },
+    {
+      "id": "training",
+      "name": "Capacitación",
+      "baseRate": 1.5,
+      "description": "Entrenamiento en tecnologías específicas",
+      "categories": ["workshops", "mentoring", "documentation"]
+    }
+  ]
+}
